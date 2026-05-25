@@ -18,7 +18,7 @@ def generate_comparative_graphs():
 
     # Adicionar coluna de identificação (Forçando nomes padrão para o projeto)
     df_mp['Modelo'] = 'MediaPipe'
-    df_yolo['Modelo'] = 'YOLOv26-pose'
+    df_yolo['Modelo'] = 'YOLOv26'
 
     # Concatenar para facilitar plotagem comparativa
     df_combined = pd.concat([df_mp, df_yolo])

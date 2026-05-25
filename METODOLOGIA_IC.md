@@ -29,12 +29,12 @@ import csv
 with open('benchmarks.csv', 'a', newline='') as f:
     writer = csv.writer(f)
     # [Modelo, Timestamp, FPS, CPU_Usage, Mem_Usage, Detecção_Sucesso]
-    writer.writerow(['YOLOv8', time.time(), fps, cpu, mem, True])
+    writer.writerow(['YOLOv26-pose', time.time(), fps, cpu, mem, True])
 ```
 
 ## 5. Estrutura do Trabalho Acadêmico
 1.  **Introdução:** Contexto de Home Office e Ergonomia.
-2.  **Referencial Teórico:** Como funciona a Pose Estimation (MediaPipe BlazePose vs YOLOv8 CNN).
+2.  **Referencial Teórico:** Como funciona a Pose Estimation (MediaPipe BlazePose vs YOLOv26-pose CNN).
 3.  **Metodologia:** Descrição do hardware usado e dos cenários de teste.
 4.  **Resultados:** Gráficos comparativos (FPS, Estabilidade, Erro).
-5.  **Conclusão:** Indicação de qual modelo é melhor para cada perfil de hardware (ex: MediaPipe para PCs fracos, YOLOv8 para maior precisão em ambientes variados).
+5.  **Conclusão:** Indicação de qual modelo é melhor para cada perfil de hardware (ex: MediaPipe para PCs fracos, YOLOv26-pose para maior precisão em ambientes variados).
