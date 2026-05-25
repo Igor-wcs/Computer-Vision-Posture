@@ -4,6 +4,10 @@ import numpy as np
 import customtkinter as ctk
 from PIL import Image, ImageTk
 import threading
+import time
+import csv
+import psutil
+import os
 
 # Configurações iniciais do CustomTkinter
 ctk.set_appearance_mode("dark")
@@ -40,9 +44,36 @@ class PostureDetectorApp(ctk.CTk):
         self.cap = cv2.VideoCapture(0)
         self.running = True
         
+        # Logging para IC
+        self.log_file = "log_mediapipe.csv"
+        self.init_log_file()
+        self.frame_count = 0
+        self.start_time = time.time()
+        
         # Thread para processamento de vídeo
         self.video_thread = threading.Thread(target=self.video_loop, daemon=True)
         self.video_thread.start()
+
+    def init_log_file(self):
+        if not os.path.exists(self.log_file):
+            with open(self.log_file, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['Timestamp', 'FPS', 'CPU_Usage_Percent', 'RAM_Usage_MB', 'Posture_Status'])
+
+    def log_data(self, status):
+        self.frame_count += 1
+        elapsed = time.time() - self.start_time
+        if elapsed > 1.0:
+            fps = self.frame_count / elapsed
+            cpu = psutil.cpu_percent()
+            ram = psutil.Process(os.getpid()).memory_info().rss / (1024 * 1024)
+            
+            with open(self.log_file, 'a', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), round(fps, 2), cpu, round(ram, 2), status])
+            
+            self.frame_count = 0
+            self.start_time = time.time()
 
     def setup_ui(self):
         # Grid layout
@@ -155,6 +186,9 @@ class PostureDetectorApp(ctk.CTk):
         color_map = {"Boa Postura": "green", "Aguardando Calibração": "yellow"}
         color_name = color_map.get(posture_status, "red")
         self.status_val_label.configure(text=posture_status, text_color=color_name)
+
+        # Log para IC
+        self.log_data(posture_status)
 
         return frame
 
