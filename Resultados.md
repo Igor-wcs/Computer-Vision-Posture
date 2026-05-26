@@ -5,12 +5,15 @@ Este documento apresenta os dados consolidados obtidos durante a execução dos 
 ## 1. Resumo Quantitativo de Performance
 Os resultados demonstram um clássico *trade-off* computacional entre eficiência de hardware e precisão estática.
 
-| Métrica | MediaPipe (BlazePose) | YOLOv26 (Nano-pose) | Comparação Direta |
+Métrica Avaliada | Estatística | MediaPipe (BlazePose) | YOLOv26-pose (CNN) |
 | :--- | :--- | :--- | :--- |
-| **FPS Médio** | 21.39 (±2.25) | 11.44 (±1.26) | MediaPipe é ~87% mais rápido |
-| **Uso de CPU (%)** | 38.44% | 98.71% | YOLO causa gargalo (satura a CPU) |
-| **Uso de RAM (MB)** | 290.7 MB | 504.2 MB | YOLO consome ~73% mais memória |
-| **Estabilidade (Jitter)** | 0.0161 | 0.0107 | YOLO "treme" menos (maior precisão) |
+| **FPS (Taxa de Quadros)** | Média | 21.39 | 11.44 |
+| | Desvio Padrão (±) | 2.25 | 1.26 |
+| **Uso de CPU (%)** | Média | 38.44% | 98.71% |
+| | Desvio Padrão (±) | 6.89% | 8.99% |
+| **Consumo de RAM (MB)** | Média | 290.76 | 504.29 |
+| | Desvio Padrão (±) | 1.15 | 2.72 |
+| **Estabilidade (Jitter)** | Variância Média* | 0.0161 | 0.0107 |
 
 *(Nota: O Jitter reflete a variância frame a frame da coordenada Y do nariz. Valores menores indicam maior estabilidade da detecção).*
 
