@@ -58,9 +58,9 @@ class PostureDetectorApp(ctk.CTk):
         if not os.path.exists(self.log_file):
             with open(self.log_file, 'w', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow(['Timestamp', 'FPS', 'CPU_Usage_Percent', 'RAM_Usage_MB', 'Posture_Status'])
+                writer.writerow(['Timestamp', 'FPS', 'CPU_Usage_Percent', 'RAM_Usage_MB', 'Posture_Status', 'Nose_X', 'Nose_Y', 'Head_Dist'])
 
-    def log_data(self, status):
+    def log_data(self, status, nose_x=0, nose_y=0, head_dist=0):
         self.frame_count += 1
         elapsed = time.time() - self.start_time
         if elapsed > 1.0:
@@ -70,7 +70,16 @@ class PostureDetectorApp(ctk.CTk):
             
             with open(self.log_file, 'a', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), round(fps, 2), cpu, round(ram, 2), status])
+                writer.writerow([
+                    time.strftime("%Y-%m-%d %H:%M:%S"), 
+                    round(fps, 2), 
+                    cpu, 
+                    round(ram, 2), 
+                    status,
+                    round(nose_x, 4),
+                    round(nose_y, 4),
+                    round(head_dist, 4)
+                ])
             
             self.frame_count = 0
             self.start_time = time.time()
@@ -81,7 +90,7 @@ class PostureDetectorApp(ctk.CTk):
         self.grid_rowconfigure(1, weight=1)
 
         # Header
-        self.header_label = ctk.CTkLabel(self, text="Monitoramento de Postura em Tempo Real", font=ctk.CTkFont(size=24, weight="bold"))
+        self.header_label = ctk.CTkLabel(self, text="Monitoramento de Postura - MediaPipe", font=ctk.CTkFont(size=24, weight="bold"))
         self.header_label.grid(row=0, column=0, padx=20, pady=10)
 
         # Video Frame
@@ -108,7 +117,6 @@ class PostureDetectorApp(ctk.CTk):
     def start_calibration(self):
         self.calibrating = True
         self.info_label.configure(text="Calibrando... Mantenha a postura por 2 segundos.")
-        # A calibração real acontece no process_posture quando calibrating é True
         threading.Timer(2.0, self.finish_calibration).start()
 
     def finish_calibration(self):
@@ -140,6 +148,7 @@ class PostureDetectorApp(ctk.CTk):
         results = self.pose.process(image_rgb)
 
         posture_status = "Aguardando Calibração"
+        curr_nose_x, curr_nose_y, curr_head_dist = 0, 0, 0
         
         if results.pose_landmarks:
             landmarks = results.pose_landmarks.landmark
@@ -158,13 +167,15 @@ class PostureDetectorApp(ctk.CTk):
                           landmarks[self.mp_pose.PoseLandmark.RIGHT_SHOULDER.value].z)
 
             mid_shoulder_y = (l_shoulder[1] + r_shoulder[1]) / 2
-            current_head_dist = abs(nose[1] - mid_shoulder_y)
+            curr_head_dist = abs(nose[1] - mid_shoulder_y)
             current_shoulder_width = abs(l_shoulder[0] - r_shoulder[0])
             current_z = (l_shoulder[2] + r_shoulder[2]) / 2
+            
+            curr_nose_x, curr_nose_y = nose[0], nose[1]
 
             # Fase de Calibração
             if hasattr(self, 'calibrating') and self.calibrating:
-                self.base_head_dist = current_head_dist
+                self.base_head_dist = curr_head_dist
                 self.base_shoulder_width = current_shoulder_width
                 self.base_z_depth = current_z
                 self.calibrating = False
@@ -172,7 +183,7 @@ class PostureDetectorApp(ctk.CTk):
             if self.calibrated:
                 posture_status = self.classify_enhanced_posture(
                     nose, l_shoulder, r_shoulder, 
-                    current_head_dist, current_shoulder_width, current_z
+                    curr_head_dist, current_shoulder_width, current_z
                 )
 
             # Desenha landmarks
@@ -187,28 +198,27 @@ class PostureDetectorApp(ctk.CTk):
         color_name = color_map.get(posture_status, "red")
         self.status_val_label.configure(text=posture_status, text_color=color_name)
 
-        # Log para IC
-        self.log_data(posture_status)
+        # Log para IC (incluindo coordenadas para Jitter)
+        self.log_data(posture_status, curr_nose_x, curr_nose_y, curr_head_dist)
 
         return frame
 
     def classify_enhanced_posture(self, nose, l_shoulder, r_shoulder, head_dist, shoulder_width, z_depth):
-        # 1. Ombros Desalinhados (Y diff)
+        # 1. Ombros Desalinhados (Y diff > 5%)
         if abs(l_shoulder[1] - r_shoulder[1]) > 0.05:
             return "Ombros Desalinhados!"
         
-        # 2. Cabeça Baixa (Comparado à calibração)
+        # 2. Cabeça Baixa (Desvio > 25%)
         if head_dist < (self.base_head_dist * 0.75):
             return "Cabeça Muito Baixa!"
 
-        # 3. Projetado para Frente (Z-depth ou Largura dos Ombros)
-        # Se os ombros aumentarem muito de largura, você se aproximou da câmera
-        if shoulder_width > (self.base_shoulder_width * 1.25):
-            return "Muito Perto da Tela!"
-        
-        # Se o Z dos ombros diminuir (ficar mais negativo), você se inclinou para frente
-        if z_depth < (self.base_z_depth - 0.15):
+        # 3. Inclinado para Frente / Proximidade (Expansão > 20%)
+        if shoulder_width > (self.base_shoulder_width * 1.20):
             return "Inclinado para Frente!"
+        
+        # 4. Muito Longe (Retração > 20%)
+        if shoulder_width < (self.base_shoulder_width * 0.80):
+            return "Muito Longe da Tela!"
 
         return "Boa Postura"
 

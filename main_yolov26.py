@@ -49,9 +49,9 @@ class PostureDetectorAppYOLO(ctk.CTk):
         if not os.path.exists(self.log_file):
             with open(self.log_file, 'w', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow(['Timestamp', 'FPS', 'CPU_Usage_Percent', 'RAM_Usage_MB', 'Posture_Status'])
+                writer.writerow(['Timestamp', 'FPS', 'CPU_Usage_Percent', 'RAM_Usage_MB', 'Posture_Status', 'Nose_X', 'Nose_Y', 'Head_Dist'])
 
-    def log_data(self, status):
+    def log_data(self, status, nose_x=0, nose_y=0, head_dist=0):
         self.frame_count += 1
         elapsed = time.time() - self.start_time
         if elapsed > 1.0:
@@ -61,7 +61,16 @@ class PostureDetectorAppYOLO(ctk.CTk):
             
             with open(self.log_file, 'a', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), round(fps, 2), cpu, round(ram, 2), status])
+                writer.writerow([
+                    time.strftime("%Y-%m-%d %H:%M:%S"), 
+                    round(fps, 2), 
+                    cpu, 
+                    round(ram, 2), 
+                    status,
+                    round(nose_x, 4),
+                    round(nose_y, 4),
+                    round(head_dist, 4)
+                ])
             
             self.frame_count = 0
             self.start_time = time.time()
@@ -128,6 +137,7 @@ class PostureDetectorAppYOLO(ctk.CTk):
     def process_posture(self, frame):
         results = self.model(frame, verbose=False)[0]
         posture_status = "Aguardando Calibração"
+        curr_nose_x, curr_nose_y, curr_head_dist = 0, 0, 0
         
         if results.keypoints is not None and len(results.keypoints.xyn) > 0:
             kpts = results.keypoints.xyn[0].cpu().numpy()
@@ -138,18 +148,20 @@ class PostureDetectorAppYOLO(ctk.CTk):
 
                 if not (np.all(nose == 0) or np.all(l_shoulder == 0) or np.all(r_shoulder == 0)):
                     mid_shoulder_y = (l_shoulder[1] + r_shoulder[1]) / 2
-                    current_head_dist = abs(nose[1] - mid_shoulder_y)
+                    curr_head_dist = abs(nose[1] - mid_shoulder_y)
                     current_shoulder_width = abs(l_shoulder[0] - r_shoulder[0])
+                    
+                    curr_nose_x, curr_nose_y = nose[0], nose[1]
 
                     if hasattr(self, 'calibrating') and self.calibrating:
-                        self.base_head_dist = current_head_dist
+                        self.base_head_dist = curr_head_dist
                         self.base_shoulder_width = current_shoulder_width
                         self.calibrating = False
 
                     if self.calibrated:
                         posture_status = self.classify_posture_yolo(
                             nose, l_shoulder, r_shoulder, 
-                            current_head_dist, current_shoulder_width
+                            curr_head_dist, current_shoulder_width
                         )
             frame = results.plot()
 
@@ -157,20 +169,28 @@ class PostureDetectorAppYOLO(ctk.CTk):
         color_name = color_map.get(posture_status, "red")
         self.status_val_label.configure(text=posture_status, text_color=color_name)
 
-        # Log para IC
-        self.log_data(posture_status)
+        # Log para IC (incluindo coordenadas para Jitter)
+        self.log_data(posture_status, curr_nose_x, curr_nose_y, curr_head_dist)
 
         return frame
 
     def classify_posture_yolo(self, nose, l_shoulder, r_shoulder, head_dist, shoulder_width):
+        # 1. Ombros Desalinhados (Y diff > 5%)
         if abs(l_shoulder[1] - r_shoulder[1]) > 0.05:
             return "Ombros Desalinhados!"
+        
+        # 2. Cabeça Baixa (Desvio > 25%)
         if head_dist < (self.base_head_dist * 0.75):
             return "Cabeça Muito Baixa!"
-        if shoulder_width > (self.base_shoulder_width * 1.2):
+        
+        # 3. Inclinado para Frente (Expansão > 20%)
+        if shoulder_width > (self.base_shoulder_width * 1.20):
             return "Inclinado para Frente!"
-        if shoulder_width < (self.base_shoulder_width * 0.8):
+        
+        # 4. Muito Longe (Retração > 20%)
+        if shoulder_width < (self.base_shoulder_width * 0.80):
             return "Muito Longe da Tela!"
+            
         return "Boa Postura"
 
     def on_closing(self):

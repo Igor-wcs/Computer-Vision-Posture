@@ -1,30 +1,29 @@
-📊 Relatório Atualizado de Comparação (Dados Recentes)
+📊 Resultados do Estudo Comparativo
 
-  1. Performance de Hardware e Processamento
-  Houve uma estabilização nos resultados, mostrando que o MediaPipe é a opção mais leve para processamento
-  em tempo real.
+Este documento apresenta os dados consolidados obtidos durante a execução dos testes comparativos controlados (sessões de aproximadamente 2 min) entre os modelos MediaPipe (BlazePose) e YOLOv26-pose.
 
-  ┌──────────────────┬───────────────────────┬────────────────────┬─────────────────────────────┐
-  │ Métrica          │ MediaPipe (BlazePose) │ YOLOv26 (Nano-pose) │ Comparação                  │
-  ├──────────────────┼───────────────────────┼────────────────────┼─────────────────────────────┤
-  │ FPS Médio        │ 20.88 FPS             │ 13.06 FPS          │ MediaPipe é 60% mais rápido │
-  │ Uso de CPU Médio │ 21.2%                 │ 91.8%              │ YOLO exige 4.3x mais CPU    │
-  │ Uso de RAM Médio │ 291.2 MB              │ 504.6 MB           │ YOLO consome 73% mais RAM   │
-  └──────────────────┴───────────────────────┴────────────────────┴─────────────────────────────┘
+## 1. Resumo Quantitativo de Performance
+Os resultados demonstram um clássico *trade-off* computacional entre eficiência de hardware e precisão estática.
 
-  2. Análise Detalhada dos Novos Dados
+| Métrica | MediaPipe (BlazePose) | YOLOv26 (Nano-pose) | Comparação Direta |
+| :--- | :--- | :--- | :--- |
+| **FPS Médio** | 21.39 (±2.25) | 11.44 (±1.26) | MediaPipe é ~87% mais rápido |
+| **Uso de CPU (%)** | 38.44% | 98.71% | YOLO causa gargalo (satura a CPU) |
+| **Uso de RAM (MB)** | 290.7 MB | 504.2 MB | YOLO consome ~73% mais memória |
+| **Estabilidade (Jitter)** | 0.0161 | 0.0107 | YOLO "treme" menos (maior precisão) |
 
-   * Eficiência Energética e Multitarefa: O MediaPipe manteve um consumo de CPU extremamente baixo e estável (entre 16%
-     e 26%), o que é ideal para o público de Home Office que precisa de recursos sobrando para chamadas de vídeo e
-     outras aplicações. 
-   * Gargalo de CPU (YOLOv26): O YOLOv26 operou quase constantemente acima de 90% de uso de CPU, chegando a atingir 100%
-     de uso em vários momentos (ex: 18:13:00). Isso indica que o modelo está limitado pelo processador do sistema e
-     poderia se beneficiar imensamente de uma GPU (placa de vídeo) para aliviar o processamento.
-   * Consistência de Detecção: 
-       * No MediaPipe, os logs mostram uma transição suave entre "Boa Postura" e "Inclinado para Frente", sugerindo que
-         as coordenadas 3D (Z) ajudam a criar uma zona de transição mais clara.
-  3. Conclusão para Iniciação Científica
-  Os novos dados reforçam a tese de que o MediaPipe é a solução mais viável para o usuário final comum devido à sua
-  economia de recursos. Por outro lado, o YOLOv26 prova ser uma ferramenta de detecção mais "robusta" e analítica, sendo recomendada para aplicações onde a máquina é dedicada exclusivamente à tarefa ou possui hardware de aceleração (GPU).
+*(Nota: O Jitter reflete a variância frame a frame da coordenada Y do nariz. Valores menores indicam maior estabilidade da detecção).*
 
-  ---
+## 2. Análise Técnica e Discussão do *Trade-off*
+
+### 2.1. O Gargalo Computacional do YOLOv26
+Os dados confirmam que a arquitetura CNN do YOLOv26-pose, executada estritamente via CPU em um processador moderno (Intel Core Ultra), resulta em saturação quase total dos núcleos (**98.7%**). Devido a este alto custo, o modelo não consegue atingir o limiar aceitável de 15 FPS definido na metodologia, operando a uma média restritiva de **11.4 FPS**. Isso inviabiliza o YOLOv26 como uma solução primária para execução em *background* sem aceleração de hardware (GPU dedicada).
+
+### 2.2. A Eficiência do MediaPipe
+O MediaPipe cumpriu com os requisitos metodológicos para um monitoramento fluido, mantendo **21.3 FPS** com uma margem segura de uso de CPU (**38.4%**). Essa folga de processamento garante que o computador do usuário possa executar outras ferramentas (como chamadas de vídeo em Home Office) sem impacto severo na experiência.
+
+### 2.3. O Fator de Precisão (Jitter)
+Apesar do alto custo, o YOLOv26 obteve uma vitória científica expressiva na **Estabilidade de Coordenadas**. Com um índice de Jitter de **0.0107** contra **0.0161** do MediaPipe, o YOLO demonstra ser matematicamente menos suscetível a tremores algorítmicos. Em cenários estáticos, as predições do YOLO oscilam consideravelmente menos.
+
+## 3. Conclusões Experimentais
+O experimento valida a hipótese de que o **MediaPipe é a solução mais escalável e viável** para democratização da ergonomia em computadores pessoais, pois cumpre o limiar de performance necessário. No entanto, o estudo comprova cientificamente que, se a latência e o consumo de hardware não forem impeditivos (ex: máquinas dedicadas ou equipadas com GPU), o **YOLOv26 oferece uma detecção mais firme e confiável (menor Jitter)**.

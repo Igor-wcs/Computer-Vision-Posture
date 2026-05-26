@@ -1,3 +1,5 @@
-Modelo,FPS,CPU_Usage_Percent,RAM_Usage_MB
-MediaPipe,20.63,20.56,291.13
-YOLOv26,13.03,90.5,504.77
+,FPS,FPS,CPU_Usage_Percent,CPU_Usage_Percent,RAM_Usage_MB,RAM_Usage_MB,Nose_Y,Nose_Y,Head_Dist,Head_Dist,Jitter
+,mean,std,mean,std,mean,std,mean,std,mean,std,mean
+Modelo,,,,,,,,,,,
+MediaPipe,21.3941,2.2507,38.444,6.895,290.7634,1.1564,0.4538,0.0899,0.3474,0.0569,0.016129565217391305
+YOLOv26,11.4392,1.2622,98.7114,8.993,504.2976,2.7283,0.4555,0.1078,0.3107,0.1163,0.010757377049180328
