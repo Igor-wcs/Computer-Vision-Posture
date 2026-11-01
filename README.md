@@ -9,6 +9,16 @@ Aplicacao Windows para comparar deteccao de postura usando o mesmo roteiro guiad
 
 O objetivo e comparar desempenho e estabilidade sob as mesmas poses, camera e condicoes de coleta. O programa nao mede apenas a velocidade do modelo: o FPS registrado representa o comportamento do fluxo de captura e inferencia em tempo real.
 
+## Versao executavel (recomendada)
+
+Para facilitar a utilizacao do projeto, esta disponivel uma versao executavel para Windows, que dispensa a instalacao manual do Python, a criacao de um ambiente virtual e a instalacao individual das dependencias.
+
+**Download:** [Computer Vision Posture v1.0.0](https://github.com/Igor-wcs/Computer-Vision-Posture/releases/tag/v1.0.0)
+
+Basta baixar o executavel disponibilizado na secao **Assets** da release e inicia-lo. A versao executavel oferece as mesmas funcionalidades da aplicacao iniciada diretamente pelo codigo-fonte.
+
+Caso prefira executar o projeto pelo codigo-fonte, siga as instrucoes de instalacao e configuracao do ambiente Python descritas a seguir.
+
 ## Requisitos
 
 - Windows 10 ou 11, 64 bits;
