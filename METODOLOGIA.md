@@ -36,8 +36,9 @@ Dada a natureza de tempo real, optou-se pela **Coleta Própria via Fluxo de Víd
 
 ### 3.2. Fases do Experimento
 1.  **Fase de Calibração:** O sistema registra as coordenadas base do usuário (posição ideal) durante 2 segundos. Isso normaliza os dados para cada biótipo.
-2.  **Sessões de Monitoramento:** Cada modelo é testado em sessões contínuas de aproximadamente **2 minutos**, alternando entre postura ereta e desvios induzidos.
-3.  **Log Automático:** O sistema gera arquivos `.csv` registrando métricas a cada segundo, incluindo as coordenadas (X, Y) do nariz e a distância focal para análise de Jitter.
+2.  **Sessões de Monitoramento:** Cada modelo segue o mesmo roteiro guiado: postura neutra, inclinação à esquerda, neutra, inclinação à direita, neutra, inclinação para frente, neutra, cabeça baixa, neutra, afastamento e retorno final à postura neutra. Cada posição deve ser reconhecida e sustentada antes do avanço.
+3.  **Log Controlado:** O sistema inicia o cronômetro e o arquivo `.csv` apenas quando o usuário inicia o teste guiado. A coleta ocorre uma vez por segundo e para automaticamente ao concluir o roteiro.
+4.  **Ordem:** MediaPipe, YOLOv26 com PyTorch, YOLOv26 com ONNX Runtime, YOLOv26 com OpenVINO FP16 (quando disponível) e geração do relatório. Os testes YOLO usam o mesmo modelo de pose e roteiro; variam apenas o framework de inferência e a otimização do OpenVINO.
 
 ## 4. Métricas de Avaliação
 Foram selecionadas quatro métricas fundamentais para cobrir viabilidade técnica e experiência do usuário:

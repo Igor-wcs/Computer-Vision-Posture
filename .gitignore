@@ -172,3 +172,11 @@ poetry.toml
 
 # LSP config files
 pyrightconfig.json
+
+comparativo_modelos.png
+log_mediapipe.csv
+log_yolo.csv
+log_yolo_onnx.csv
+log_yolo_openvino.csv
+relatorio_benchmark.md
+resumo_estatistico.csv

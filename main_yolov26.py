@@ -100,7 +100,7 @@ class PostureDetectorAppYOLO(ctk.CTk):
         self.calibrate_button.grid(row=0, column=2, padx=20, pady=10)
 
         # Info Labels
-        self.info_label = ctk.CTkLabel(self, text="Sente-se ereto e clique em 'Calibrar' para começar.", font=ctk.CTkFont(size=12))
+        self.info_label = ctk.CTkLabel(self, text="Sente-se reto e clique em 'Calibrar' para começar.", font=ctk.CTkFont(size=12))
         self.info_label.grid(row=3, column=0, pady=5)
 
         self.protocol("WM_DELETE_WINDOW", self.on_closing)

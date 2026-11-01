@@ -1,60 +1,23 @@
+"""Testes dos limites usados pelo backend YOLO, sem carregar o modelo."""
+
 import unittest
-import numpy as np
-from main_yolov26 import PostureDetectorAppYOLO
+
+from benchmark_core import FORWARD, GOOD_POSTURE, HEAD_DOWN, SHOULDERS, classify_posture
+
 
 class TestPostureYOLOLogic(unittest.TestCase):
-    
-    def setUp(self):
-        self.app = PostureDetectorAppYOLO()
-        # Mock de calibração
-        self.app.base_head_dist = 0.2
-        self.app.base_shoulder_width = 0.3
-        self.app.calibrated = True
-
     def test_good_posture_logic(self):
-        """Testa se a lógica identifica corretamente uma boa postura no YOLO."""
-        nose = np.array([0.5, 0.4])
-        l_shoulder = np.array([0.4, 0.6])
-        r_shoulder = np.array([0.6, 0.6])
-        head_dist = 0.2
-        shoulder_width = 0.2
-        
-        # Ajustando para os valores de setup
-        status = self.app.classify_posture_yolo(nose, l_shoulder, r_shoulder, 0.2, 0.3)
-        self.assertEqual(status, "Boa Postura")
+        self.assertEqual(classify_posture((0.35, 0.60), (0.65, 0.60), 0.20, 0.30, 0.20, 0.30), GOOD_POSTURE)
 
     def test_head_down_logic(self):
-        """Testa se a lógica identifica 'Cabeça Muito Baixa'."""
-        nose = np.array([0.5, 0.55])
-        l_shoulder = np.array([0.4, 0.6])
-        r_shoulder = np.array([0.6, 0.6])
-        
-        # head_dist muito pequeno (0.05 vs base 0.2)
-        status = self.app.classify_posture_yolo(nose, l_shoulder, r_shoulder, 0.05, 0.3)
-        self.assertEqual(status, "Cabeça Muito Baixa!")
+        self.assertEqual(classify_posture((0.35, 0.60), (0.65, 0.60), 0.05, 0.30, 0.20, 0.30), HEAD_DOWN)
 
     def test_shoulder_misalignment_logic(self):
-        """Testa se a lógica identifica 'Ombros Desalinhados'."""
-        nose = np.array([0.5, 0.4])
-        l_shoulder = np.array([0.4, 0.5])
-        r_shoulder = np.array([0.6, 0.6])
-        
-        status = self.app.classify_posture_yolo(nose, l_shoulder, r_shoulder, 0.1, 0.3)
-        self.assertEqual(status, "Ombros Desalinhados!")
+        self.assertEqual(classify_posture((0.35, 0.50), (0.65, 0.60), 0.20, 0.30, 0.20, 0.30), SHOULDERS)
 
     def test_forward_lean_logic(self):
-        """Testa se a lógica identifica 'Inclinado para Frente' (ombros largos)."""
-        nose = np.array([0.5, 0.4])
-        l_shoulder = np.array([0.3, 0.6])
-        r_shoulder = np.array([0.7, 0.6])
-        
-        # shoulder_width = 0.4 (maior que base 0.3 * 1.2 = 0.36)
-        status = self.app.classify_posture_yolo(nose, l_shoulder, r_shoulder, 0.2, 0.4)
-        self.assertEqual(status, "Inclinado para Frente!")
+        self.assertEqual(classify_posture((0.30, 0.60), (0.70, 0.60), 0.20, 0.40, 0.20, 0.30), FORWARD)
 
-if __name__ == '__main__':
-    # Usamos um try/except para evitar erro de inicialização do CustomTkinter em ambientes sem display
-    try:
-        unittest.main()
-    except Exception as e:
-        print(f"Erro ao rodar testes (provavelmente falta de display): {e}")
+
+if __name__ == "__main__":
+    unittest.main()
